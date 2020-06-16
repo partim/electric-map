@@ -151,30 +151,53 @@ class VectorRenderer(object):
     def render(self, zoom, x, y):
         p0 = self.gproj.tile_nw(zoom, x, y+1)
         p1 = self.gproj.tile_nw(zoom, x+1, y)
+        print(p0, p1)
+
+        params = {
+            'x0': p0[0],
+            'y0': p0[1],
+            'x1': p1[0],
+            'y1': p1[1],
+            'seg': (p1[0] - p0[0]) / 4
+        }
 
         cursor = self.get_db().cursor()
         cursor.execute("""\
-            SELECT ST_AsMVT(tile) FROM (
+            SELECT COUNT(*), ST_AsMVT(tile) FROM (
                 SELECT
-                    id, name, railway, voltage, frequency,
+                    osm_id, name, railway, electrified, voltage, frequency,
                     ST_AsMVTGeom(
                         way,
-                        ST_Makebox2d(
-                            ST_transform(
-                                ST_SetSrid(ST_MakePoint(%s, %s), 4326), 3857
-                            ),
-                            ST_transform(
-                                ST_SetSrid(ST_MakePoint(%s,%s), 4326), 3857
-                            )
-                        ),
+                        ST_Transform(
+                            ST_Segmentize(
+                                ST_MakeEnvelope(
+                                    %(x0)s, %(y0)s, %(x1)s, %(y1)s, 4326
+                                ),
+                                %(seg)s
+                            ), 3857
+                        )::box2d,
                         4096, 0, false
                     ) AS geom
                 FROM osm_line
-            ) AS tile
+                WHERE
+                    ST_Intersects(
+                        way,
+                        ST_Transform(
+                            ST_MakeEnvelope(
+                                %(x0)s, %(y0)s, %(x1)s, %(y1)s, 4326
+                            ),
+                            3857
+                        )
+                    )
+                AND railway is not null
+            ) as tile
             """,
-            (p0[0], p0[1], p1[0], p1[1])
+            params
         )
-        return str(cursor.fetchone()[0])
+        (count, tile) = cursor.fetchone()
+        tile = bytes(tile)
+        print(count, len(tile))
+        return tile
 
     def on_get(self, req, resp, zoom, x, y):
         try:
@@ -186,8 +209,8 @@ class VectorRenderer(object):
 
         tile = self.render(zoom, x, y)
 
-        resp.content_type = "application/octet-stream"
-        resp.body = tile
+        resp.content_type = "application/vnd.mapbox-vector-tile"
+        resp.data = tile
 
 
 class TestMap(object):
@@ -232,7 +255,7 @@ def setup(app):
     )
     app.add_route(
         '/vector/{zoom}/{x}/{y}',
-        VectorRenderer(os.path.join(basepath, "basemap.xml"))
+        VectorRenderer()
     )
 
 

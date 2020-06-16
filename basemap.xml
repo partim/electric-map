@@ -1,0 +1,244 @@
+<!DOCTYPE Map>
+<!-- 
+    water_color  "#e1eef6"
+    shore_color  "#557eaa"
+    border_color "#b826e5"
+-->
+
+<Map background-color="#ffffff00" buffer-size="256"
+    srs="+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0
+         +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs +over"
+>
+
+    <!-- The data source defines the basic parameters where to take the
+         data from. We all have it in a PostGIS database, so there is only
+         one source.
+    -->
+    <Datasource name="psql">
+        <Parameter name="type">postgis</Parameter>
+        <Parameter name="port">5432</Parameter>
+        <Parameter name="estimate_extent">false</Parameter>
+        <Parameter name="extent">
+            -20037508,-19929239,20037508,19929239
+        </Parameter>
+        <Parameter name="dbname">elmap</Parameter>
+        <Parameter name="geometry_field">geom</Parameter>
+        <Parameter name="srid">3857</Parameter>
+    </Datasource>
+
+    <Layer name="base-rail">
+        <Datasource base="psql">
+            <Parameter name="table">
+                (SELECT way as geom FROM planet_osm_line
+                    WHERE ("railway" = 'rail' or "railway" = 'subway')
+                ) as subquery
+            </Parameter>
+        </Datasource>
+        <StyleName>base-rail</StyleName>
+    </Layer>
+
+    <Layer name="rail-none">
+        <Datasource base="psql">
+            <Parameter name="table">
+                (SELECT way as geom FROM planet_osm_line
+                    WHERE ("railway" = 'rail' or "railway" = 'subway')
+                      AND ("electrified" is NULL OR "electrified" = 'no')
+                ) as subquery
+            </Parameter>
+        </Datasource>
+        <StyleName>rail-none</StyleName>
+    </Layer>
+
+    <Layer name="rail-ocl-25ac">
+        <Datasource base="psql">
+            <Parameter name="table">
+                (SELECT way as geom FROM planet_osm_line
+                    WHERE ("railway" = 'rail' or "railway" = 'subway')
+                      AND "electrified" = 'contact_line'
+                      AND "voltage" = '25000'
+                      AND "frequency" != '0'
+                ) as subquery
+            </Parameter>
+        </Datasource>
+        <StyleName>rail-ocl-25ac</StyleName>
+    </Layer>
+
+    <Layer name="rail-3rd-750">
+        <Datasource base="psql">
+            <Parameter name="table">
+                (SELECT way as geom FROM planet_osm_line
+                    WHERE ("railway" = 'rail' or "railway" = 'subway')
+                      AND "electrified" = 'rail'
+                      AND "voltage" = '750'
+                      AND "frequency" = '0'
+                ) as subquery
+            </Parameter>
+        </Datasource>
+        <StyleName>rail-3rd-750</StyleName>
+    </Layer>
+
+    <Layer name="rail-3rd-630">
+        <Datasource base="psql">
+            <Parameter name="table">
+                (SELECT way as geom FROM planet_osm_line
+                    WHERE ("railway" = 'rail' or "railway" = 'subway')
+                      AND "electrified" = 'rail'
+                      AND "voltage" = '630'
+                      AND "frequency" = '0'
+                ) as subquery
+            </Parameter>
+        </Datasource>
+        <StyleName>rail-3rd-630</StyleName>
+    </Layer>
+
+    <Layer name="rail-4th-750">
+        <Datasource base="psql">
+            <Parameter name="table">
+                (SELECT way as geom FROM planet_osm_line
+                    WHERE ("railway" = 'rail' or "railway" = 'subway')
+                      AND "electrified" = '4th_rail'
+                      AND "voltage" = '630'
+                      AND "frequency" = '0'
+                ) as subquery
+            </Parameter>
+        </Datasource>
+        <StyleName>rail-4th-750</StyleName>
+    </Layer>
+    <Layer name="rail-4th-630">
+        <Datasource base="psql">
+            <Parameter name="table">
+                (SELECT way as geom FROM planet_osm_line
+                    WHERE ("railway" = 'rail' or "railway" = 'subway')
+                      AND "electrified" = '4th_rail'
+                      AND "voltage" = '750'
+                      AND "frequency" = '0'
+                ) as subquery
+            </Parameter>
+        </Datasource>
+        <StyleName>rail-4th-630</StyleName>
+    </Layer>
+
+    <Layer name="rail-ocl-25ac-4th-750">
+        <Datasource base="psql">
+            <Parameter name="table">
+                (SELECT way as geom FROM planet_osm_line
+                    WHERE ("railway" = 'rail' or "railway" = 'subway')
+                      AND (
+                              (
+                                  "electrified" = 'contact_line;rail'
+                                  AND voltage='25000;750'
+                                  AND frequency='50;0'
+                              )
+                          OR  (
+                                  "electrified" = 'rail;contact_line'
+                                  AND voltage='750;25000'
+                                  AND frequency='0;50'
+                              )
+                      )
+                ) as subquery
+            </Parameter>
+        </Datasource>
+        <StyleName>rail-3rd-750-combined</StyleName>
+        <StyleName>rail-ocl-25ac-combined</StyleName>
+    </Layer>
+
+    <!-- Styles
+    -->
+
+    <Style name="base-rail">
+        <Rule>
+            <LineSymbolizer
+                stroke="#FF00FF"
+                stroke-linecap="square"
+                stroke-linejoin="round"
+                stroke-width="0.5"
+            />
+        </Rule>
+    </Style>
+
+    <Style name="rail-none">
+        <Rule>
+            <LineSymbolizer
+                stroke="#000000"
+                stroke-linecap="square"
+                stroke-linejoin="round"
+                stroke-width="3.0"
+            />
+        </Rule>
+    </Style>
+
+    <Style name="rail-ocl-25ac">
+        <Rule>
+            <LineSymbolizer
+                stroke="#f00000"
+                stroke-linecap="square"
+                stroke-linejoin="round"
+                stroke-width="3.0"
+            />
+        </Rule>
+    </Style>
+    <Style name="rail-ocl-25ac-combined">
+        <Rule>
+            <LineSymbolizer
+                stroke="#f00000"
+                stroke-linecap="square"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+                x-stroke-dasharray="10,15"
+            />
+        </Rule>
+    </Style>
+
+    <Style name="rail-3rd-750">
+        <Rule>
+            <LineSymbolizer
+                stroke="#00A01E"
+                stroke-linecap="square"
+                stroke-linejoin="round"
+                stroke-width="3.0"
+            />
+        </Rule>
+    </Style>
+    <Style name="rail-3rd-750-combined">
+        <Rule>
+            <LineSymbolizer
+                stroke="#00A01E"
+                stroke-linecap="square"
+                stroke-linejoin="round"
+                stroke-width="5.0"
+            />
+        </Rule>
+    </Style>
+    <Style name="rail-3rd-630">
+        <Rule>
+            <LineSymbolizer
+                stroke="#008d5e"
+                stroke-linecap="square"
+                stroke-linejoin="round"
+                stroke-width="3.0"
+            />
+        </Rule>
+    </Style>
+
+    <Style name="rail-4th-750">
+        <Rule>
+            <LineSymbolizer
+                stroke="#0040ff"
+                stroke-linecap="square"
+                stroke-linejoin="round"
+                stroke-width="3.0"
+            />
+        </Rule>
+    </Style>
+    <Style name="rail-4th-630">
+        <Rule>
+            <LineSymbolizer
+                stroke="#0060f0"
+                stroke-linecap="square"
+                stroke-linejoin="round"
+                stroke-width="3.0"
+            />
+        </Rule>
+    </Style>
+</Map>
+
