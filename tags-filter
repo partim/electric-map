@@ -1,0 +1,22 @@
+# Osmium Tag Filters
+#
+# This file contains the filter expression for all the data we want to retain
+# from the source planet file.
+#
+# See osmium-tags-filter(1) for more information.
+
+# Water Features
+#
+a/natural=water
+a/natural=strait
+
+w/waterway=river,stream,canal,drain,ditch
+a/waterway=riverbank
+
+# Borders
+#
+w/boundary=administrative
+
+# Railways
+w/railway
+
