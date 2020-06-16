@@ -178,7 +178,7 @@ class VectorRenderer(object):
                         )::box2d,
                         4096, 0, false
                     ) AS geom
-                FROM osm_line
+                FROM planet_osm_line
                 WHERE
                     ST_Intersects(
                         way,

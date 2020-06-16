@@ -66,6 +66,10 @@
           carbon: '#000000',
           other: '#ff0ff',
         };
+        var widths = {
+          rail: 1.5,
+          tran: 0.75,
+        }
 
         var stroke = new ol.style.Stroke({color: '', width: 1.2});
         var line = new ol.style.Style({stroke: stroke});
@@ -76,74 +80,78 @@
           var electrified = feature.get('electrified');
           var voltage = feature.get('voltage');
           if (railway == 'rail' || railway == "subway") {
-            stroke.setLineDash([]);
-            stroke.setColor(colors.other);
-            if (electrified == 'contact_line') {
-              if (voltage == '25000') {
-                stroke.setColor(colors.ocl25000);
-              }
-              else if (voltage == '1500') {
-                stroke.setColor(colors.ocl1500);
-              }
-              else if (voltage == '750') {
-                stroke.setColor(colors.ocl750);
-              }
-              else if (voltage == '600') {
-                stroke.setColor(colors.ocl600);
-              }
-              else if (Number(voltage) <= 550) {
-                stroke.setColor(colors.ocl550);
-              }
+            stroke.setWidth(widths.rail);
+          }
+          else if (railway == 'light_rail' || railway == 'tram') {
+            stroke.setWidth(widths.tram);
+          }
+          else {
+            return undefined;
+          }
+          stroke.setColor(colors.other);
+          if (electrified == 'contact_line') {
+            if (voltage == '25000') {
+              stroke.setColor(colors.ocl25000);
             }
-            else if (electrified == 'rail') {
-              if (voltage == '750') {
-                stroke.setColor(colors.r3_750);
-              }
-              else if (voltage == '630') {
-                stroke.setColor(colors.r3_630);
-              }
-              else if (Number(voltage) <= 550) {
-                stroke.setColor(colors.r3_550);
-              }
+            else if (voltage == '1500') {
+              stroke.setColor(colors.ocl1500);
             }
-            else if (electrified == '4th_rail') {
-              if (voltage == '750') {
-                stroke.setColor(colors.r4_750);
-              }
-              else if (voltage == '630') {
-                stroke.setColor(colors.r4_630);
-              }
+            else if (voltage == '750') {
+              stroke.setColor(colors.ocl750);
             }
-            else if (electrified == 'contact_line;rail') {
-              if (voltage == '25000;750') {
-                stroke.setColor(colors.ocl25000_r3_750);
-              }
+            else if (voltage == '600') {
+              stroke.setColor(colors.ocl600);
             }
-            else if (electrified == 'rail;contact_line') {
-              if (voltage == '750;25000') {
-                stroke.setColor(colors.ocl25000_r3_750);
-              }
+            else if (Number(voltage) <= 550) {
+              stroke.setColor(colors.ocl550);
             }
-            else if (electrified == 'contact_line;4th_rail') {
-              if (voltage == '25000;750') {
-                stroke.setColor(colors.ocl25000_r4_750);
-              }
+          }
+          else if (electrified == 'rail') {
+            if (voltage == '750') {
+              stroke.setColor(colors.r3_750);
             }
-            else if (electrified == '4th_rail;contact_line') {
-              if (voltage == '750;25000') {
-                stroke.setColor(colors.ocl25000_r4_750);
-              }
+            else if (voltage == '630') {
+              stroke.setColor(colors.r3_630);
             }
-            else if (electrified == '') {
-              stroke.setColor(colors.carbon);
+            else if (Number(voltage) <= 550) {
+              stroke.setColor(colors.r3_550);
             }
-            styles[length ++] = line;
+          }
+          else if (electrified == '4th_rail') {
+            if (voltage == '750') {
+              stroke.setColor(colors.r4_750);
+            }
+            else if (voltage == '630') {
+              stroke.setColor(colors.r4_630);
+            }
+          }
+          else if (electrified == 'contact_line;rail') {
+            if (voltage == '25000;750') {
+              stroke.setColor(colors.ocl25000_r3_750);
+            }
+          }
+          else if (electrified == 'rail;contact_line') {
+            if (voltage == '750;25000') {
+              stroke.setColor(colors.ocl25000_r3_750);
+            }
+          }
+          else if (electrified == 'contact_line;4th_rail') {
+            if (voltage == '25000;750') {
+              stroke.setColor(colors.ocl25000_r4_750);
+            }
+          }
+          else if (electrified == '4th_rail;contact_line') {
+            if (voltage == '750;25000') {
+              stroke.setColor(colors.ocl25000_r4_750);
+            }
+          }
+          else if (electrified == 'no' || typeof electrified == "undefined") {
+            stroke.setColor(colors.carbon);
           }
           else {
             stroke.setColor('#ff00ff');
-            stroke.setLineDash([10, 10]);
-            styles[length ++] = line;
           }
+          styles[length ++] = line;
           styles.length = length;
           return styles;
         }
@@ -192,7 +200,7 @@
         view: new ol.View({
           center: ol.proj.transform(init_view.center, "EPSG:4326", "EPSG:3857"),
           zoom: init_view.zoom,
-          maxZoom: 15,
+          maxZoom: 16,
           constrainResolution: true
         }),
       });
